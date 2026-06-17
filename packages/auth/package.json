@@ -1,0 +1,18 @@
+{
+  "name": "@sso/auth",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "pg": "catalog:"
+  },
+  "peerDependencies": {
+    "better-auth": "catalog:"
+  },
+  "devDependencies": {
+    "@types/pg": "catalog:",
+    "typescript": "catalog:"
+  }
+}

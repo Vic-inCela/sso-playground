@@ -1,0 +1,34 @@
+{
+  "name": "@sso/idp",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 8410",
+    "build": "next build",
+    "start": "next start -p 8410",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "seed": "tsx scripts/seed.ts"
+  },
+  "dependencies": {
+    "@better-auth/oauth-provider": "catalog:",
+    "@sso/auth": "workspace:*",
+    "better-auth": "catalog:",
+    "next": "catalog:",
+    "pg": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "catalog:",
+    "@types/node": "catalog:",
+    "@types/pg": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "eslint": "catalog:",
+    "eslint-config-next": "catalog:",
+    "tailwindcss": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  }
+}
