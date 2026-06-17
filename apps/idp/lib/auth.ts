@@ -20,8 +20,8 @@ export const auth = betterAuth({
       loginPage: "/sign-in",
       consentPage: "/consent",
       silenceWarnings: { oauthAuthServerConfig: true },
-      // consumer-b is trusted and skips the consent screen
-      cachedTrustedClients: new Set(["consumer-b"]),
+      // consumer-b and consumer-c are trusted and skip the consent screen
+      cachedTrustedClients: new Set(["consumer-b", "consumer-c"]),
       // Demo only: store client secrets verbatim so the seed script can insert a
       // known secret that the token endpoint will accept without hashing.
       // Default would be "hashed" (because jwt() is enabled).
@@ -36,5 +36,9 @@ export const auth = betterAuth({
     // nextCookies() MUST be last
     nextCookies(),
   ],
-  trustedOrigins: [env.CONSUMER_A_ORIGIN, env.CONSUMER_B_ORIGIN],
+  trustedOrigins: [
+    env.CONSUMER_A_ORIGIN,
+    env.CONSUMER_B_ORIGIN,
+    ...(env.CONSUMER_C_ORIGIN ? [env.CONSUMER_C_ORIGIN] : []),
+  ],
 })

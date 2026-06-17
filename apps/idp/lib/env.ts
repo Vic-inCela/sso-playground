@@ -8,6 +8,8 @@ const envSchema = z.object({
   CONSUMER_A_ORIGIN: z.string().url(),
   CONSUMER_B_CLIENT_SECRET: z.string().min(1),
   CONSUMER_B_ORIGIN: z.string().url(),
+  CONSUMER_C_CLIENT_SECRET: z.string().min(1).optional(),
+  CONSUMER_C_ORIGIN: z.string().url().optional(),
 })
 
 function parseEnv() {

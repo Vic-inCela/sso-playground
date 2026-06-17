@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+:root {
+  --color-accent: oklch(0.7 0.19 55); /* amber-500 */
+  --color-accent-hover: oklch(0.63 0.19 55);
+  --color-accent-light: oklch(0.97 0.04 55);
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.14 0.02 55);
+}

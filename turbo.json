@@ -15,7 +15,9 @@
         "CONSUMER_B_ORIGIN",
         "IDP_DISCOVERY_URL",
         "IDP_CLIENT_ID",
-        "IDP_CLIENT_SECRET"
+        "IDP_CLIENT_SECRET",
+        "CONSUMER_C_CLIENT_SECRET",
+        "CONSUMER_C_ORIGIN"
       ]
     },
     "dev": {
