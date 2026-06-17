@@ -1,10 +1,11 @@
 "use client"
 
+import { Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { useState, useTransition } from "react"
 import { authClient } from "@/lib/auth-client"
 
-export default function ConsentPage() {
+function ConsentForm() {
   const searchParams = useSearchParams()
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -44,7 +45,7 @@ export default function ConsentPage() {
         <h1 className="text-xl font-bold text-slate-900">Authorize access</h1>
 
         <p className="mt-3 text-sm text-slate-600">
-          <span className="font-semibold font-mono text-indigo-700">
+          <span className="font-mono font-semibold text-indigo-700">
             {clientId}
           </span>{" "}
           is requesting access to your account.
@@ -91,5 +92,19 @@ export default function ConsentPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ConsentPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-sm p-8 text-sm text-slate-500">
+          Loading…
+        </div>
+      }
+    >
+      <ConsentForm />
+    </Suspense>
   )
 }
