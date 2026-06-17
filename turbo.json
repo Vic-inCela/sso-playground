@@ -3,7 +3,20 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": [
+        "DATABASE_URL",
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "NEXT_PUBLIC_BETTER_AUTH_URL",
+        "CONSUMER_A_CLIENT_SECRET",
+        "CONSUMER_A_ORIGIN",
+        "CONSUMER_B_CLIENT_SECRET",
+        "CONSUMER_B_ORIGIN",
+        "IDP_DISCOVERY_URL",
+        "IDP_CLIENT_ID",
+        "IDP_CLIENT_SECRET"
+      ]
     },
     "dev": {
       "cache": false,
