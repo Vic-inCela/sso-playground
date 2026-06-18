@@ -96,57 +96,106 @@ export async function loginUpstream(opts: {
       cache: "no-store",
       signal: AbortSignal.timeout(10_000),
     })
-  } catch {
+  } catch (e) {
+    console.error("[playhorny] fetch error", { message: String(e) })
     throw new APIError("INTERNAL_SERVER_ERROR", {
       message: "登入失敗，請稍後再試",
     })
   }
+
+  // Read as text first so a non-JSON body can be logged
+  const text = await res.text()
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let body: Record<string, any>
+  try {
+    body = JSON.parse(text)
+  } catch {
+    console.error("[playhorny] non-JSON upstream response", {
+      status: res.status,
+      bodySnippet: text.slice(0, 300),
+    })
+    throw new APIError("INTERNAL_SERVER_ERROR", {
+      message: "登入失敗 (upstream returned non-JSON, status " + res.status + ")",
+    })
+  }
+
+  // Field-casing tolerant extraction (snake_case OR camelCase)
+  const result = body.result ?? body
+  const code: number | undefined = result?.code
+  const data: Record<string, unknown> = (body.data as Record<string, unknown>) ?? {}
+  const userInfo: Record<string, unknown> =
+    (data.user_info as Record<string, unknown>) ??
+    (data.userInfo as Record<string, unknown>) ??
+    {}
+  const token = data.token as string | undefined
+  const refreshToken =
+    (data.refresh_token as string | undefined) ??
+    (data.refreshToken as string | undefined)
+  const userId =
+    (userInfo.user_id as string | undefined) ??
+    (userInfo.userId as string | undefined)
+  const nickname = userInfo.nickname as string | undefined
+  const upstreamEmail = userInfo.email as string | undefined
+
+  // Always log one diagnostic line (keys + code + msg only — no values)
+  console.log("[playhorny] upstream /users/login", {
+    status: res.status,
+    code,
+    msg: result?.msg,
+    dataKeys: Object.keys(data),
+    userInfoKeys: Object.keys(userInfo),
+  })
 
   if (!res.ok) {
+    // If the parsed body already has a known error code, prefer the mapped message
+    const mappedMsg =
+      code !== undefined ? CODE_MESSAGES[code] : undefined
     throw new APIError("INTERNAL_SERVER_ERROR", {
-      message: "登入失敗，請稍後再試",
+      message:
+        mappedMsg ?? "登入失敗 (upstream HTTP " + res.status + ")",
     })
   }
 
-  let body: {
-    result: { code: number; msg: string; http_code?: string }
-    data: {
-      token: string
-      refresh_token: string
-      user_info: { user_id: string; nickname?: string; email?: string }
-    }
-  }
-
-  try {
-    body = await res.json()
-  } catch {
+  if (code === undefined) {
+    console.error("[playhorny] unexpected response shape", {
+      dataKeys: Object.keys(data),
+      userInfoKeys: Object.keys(userInfo),
+    })
     throw new APIError("INTERNAL_SERVER_ERROR", {
-      message: "登入失敗，請稍後再試",
+      message: "登入失敗 (unexpected response shape)",
     })
   }
 
-  if (body.result.code !== 1) {
-    const msg =
-      CODE_MESSAGES[body.result.code] ?? "帳號或密碼錯誤"
-    throw new APIError("UNAUTHORIZED", { message: msg })
+  if (code !== 1) {
+    throw new APIError("UNAUTHORIZED", {
+      message: CODE_MESSAGES[code] ?? "登入失敗 (code " + code + ")",
+    })
   }
 
-  const { user_info, token, refresh_token } = body.data
-  const { user_id, nickname, email: upstreamEmail } = user_info
+  if (!token || !userId) {
+    console.error("[playhorny] missing token or user id", {
+      dataKeys: Object.keys(data),
+      userInfoKeys: Object.keys(userInfo),
+    })
+    throw new APIError("INTERNAL_SERVER_ERROR", {
+      message: "登入失敗 (missing token or user id)",
+    })
+  }
 
   // Normalise email: use upstream email, or treat account as email if it
   // looks like one, or synthesise a placeholder.
   const looksLikeEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(opts.account)
   const email =
     upstreamEmail ||
-    (looksLikeEmail ? opts.account : `${user_id}@playhorny.local`)
+    (looksLikeEmail ? opts.account : `${userId}@playhorny.local`)
 
   const name = nickname || upstreamEmail || opts.account
 
   return {
     token,
-    refreshToken: refresh_token,
-    user: { id: user_id, name, email },
+    refreshToken: refreshToken ?? "",
+    user: { id: userId, name, email },
   }
 }
 
