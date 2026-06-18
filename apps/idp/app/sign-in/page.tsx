@@ -4,6 +4,7 @@ import { Suspense } from "react"
 import { useState, useTransition } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { authClient } from "@/lib/auth-client"
+import { TurnstileWidget } from "@/components/turnstile"
 
 // ---------------------------------------------------------------------------
 // Demo (email + password) sign-in form — keeps the existing SSO consumer demo
@@ -124,6 +125,9 @@ function PlayhornySignInForm() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  // Bumping this number resets the Turnstile widget (tokens are single-use)
+  const [resetSignal, setResetSignal] = useState(0)
 
   // Same callbackURL used by the demo form — ensures the /authorize flow resumes
   // identically after a successful playhorny login.
@@ -136,7 +140,13 @@ function PlayhornySignInForm() {
     startTransition(async () => {
       const result = await authClient.$fetch("/sign-in/playhorny", {
         method: "POST",
-        body: { account, password, callbackURL },
+        body: {
+          account,
+          password,
+          callbackURL,
+          verifyCode: turnstileToken ?? undefined,
+          codeResource: "turnstile",
+        },
       })
 
       if (result.error) {
@@ -144,6 +154,9 @@ function PlayhornySignInForm() {
           (result.error as { message?: string }).message ??
           "登入失敗，請稍後再試"
         setError(msg)
+        // Token is consumed on each attempt — reset widget and clear token
+        setResetSignal((n) => n + 1)
+        setTurnstileToken(null)
         return
       }
 
@@ -206,6 +219,8 @@ function PlayhornySignInForm() {
           />
         </div>
 
+        <TurnstileWidget onToken={setTurnstileToken} resetSignal={resetSignal} />
+
         {error && (
           <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
             {error}
@@ -214,7 +229,7 @@ function PlayhornySignInForm() {
 
         <button
           type="submit"
-          disabled={isPending}
+          disabled={isPending || !turnstileToken}
           className="w-full rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50"
         >
           {isPending ? "登入中…" : "登入"}

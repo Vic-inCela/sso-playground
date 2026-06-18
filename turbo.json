@@ -22,7 +22,8 @@
         "AUTH_LOGIN_CLIENT_ID",
         "AUTH_LOGIN_AUTH_KIND",
         "AUTH_REQUEST_SOURCE",
-        "UPSTREAM_WAF_HEADER_VALUE"
+        "UPSTREAM_WAF_HEADER_VALUE",
+        "NEXT_PUBLIC_TURNSTILE_SITE_KEY"
       ]
     },
     "dev": {
