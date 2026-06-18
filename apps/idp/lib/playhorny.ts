@@ -147,56 +147,60 @@ export async function loginUpstream(opts: {
     userInfoKeys: Object.keys(userInfo),
   })
 
-  if (!res.ok) {
-    // If the parsed body already has a known error code, prefer the mapped message
-    const mappedMsg =
-      code !== undefined ? CODE_MESSAGES[code] : undefined
-    throw new APIError("INTERNAL_SERVER_ERROR", {
-      message:
-        mappedMsg ?? "登入失敗 (upstream HTTP " + res.status + ")",
-    })
+  // SECURITY: never log token / refreshToken / password values — only keys,
+  // status, code, and msg are logged above.
+
+  // 1. code === 1 → SUCCESS (regardless of HTTP status)
+  if (code === 1) {
+    if (!token || !userId) {
+      console.error("[playhorny] missing token or user id", {
+        dataKeys: Object.keys(data),
+        userInfoKeys: Object.keys(userInfo),
+      })
+      throw new APIError("INTERNAL_SERVER_ERROR", {
+        message: "登入失敗 (missing token or user id)",
+      })
+    }
+
+    // Normalise email: use upstream email, or treat account as email if it
+    // looks like one, or synthesise a placeholder.
+    const looksLikeEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(opts.account)
+    const email =
+      upstreamEmail ||
+      (looksLikeEmail ? opts.account : `${userId}@playhorny.local`)
+
+    const name = nickname || upstreamEmail || opts.account
+
+    return {
+      token,
+      refreshToken: refreshToken ?? "",
+      user: { id: userId, name, email },
+    }
   }
 
-  if (code === undefined) {
-    console.error("[playhorny] unexpected response shape", {
-      dataKeys: Object.keys(data),
-      userInfoKeys: Object.keys(userInfo),
-    })
-    throw new APIError("INTERNAL_SERVER_ERROR", {
-      message: "登入失敗 (unexpected response shape)",
-    })
-  }
-
-  if (code !== 1) {
+  // 2. code !== undefined but !== 1 → known/unknown logical failure (e.g. 301
+  //    bad credentials).  Return a clean 401 with the mapped message regardless
+  //    of HTTP status so callers never see a confusing 500 for auth errors.
+  if (code !== undefined) {
     throw new APIError("UNAUTHORIZED", {
       message: CODE_MESSAGES[code] ?? "登入失敗 (code " + code + ")",
     })
   }
 
-  if (!token || !userId) {
-    console.error("[playhorny] missing token or user id", {
-      dataKeys: Object.keys(data),
-      userInfoKeys: Object.keys(userInfo),
-    })
+  // 3. code === undefined → no parseable logical code; fall back to HTTP status
+  if (!res.ok) {
     throw new APIError("INTERNAL_SERVER_ERROR", {
-      message: "登入失敗 (missing token or user id)",
+      message: "登入失敗 (upstream HTTP " + res.status + ")",
     })
   }
 
-  // Normalise email: use upstream email, or treat account as email if it
-  // looks like one, or synthesise a placeholder.
-  const looksLikeEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(opts.account)
-  const email =
-    upstreamEmail ||
-    (looksLikeEmail ? opts.account : `${userId}@playhorny.local`)
-
-  const name = nickname || upstreamEmail || opts.account
-
-  return {
-    token,
-    refreshToken: refreshToken ?? "",
-    user: { id: userId, name, email },
-  }
+  console.error("[playhorny] unexpected response shape", {
+    dataKeys: Object.keys(data),
+    userInfoKeys: Object.keys(userInfo),
+  })
+  throw new APIError("INTERNAL_SERVER_ERROR", {
+    message: "登入失敗 (unexpected response shape)",
+  })
 }
 
 // ---------------------------------------------------------------------------
