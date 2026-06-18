@@ -47,5 +47,8 @@ export const auth = betterAuth({
     env.CONSUMER_A_ORIGIN,
     env.CONSUMER_B_ORIGIN,
     ...(env.CONSUMER_C_ORIGIN ? [env.CONSUMER_C_ORIGIN] : []),
+    ...(process.env.NODE_ENV !== "production"
+      ? ["http://localhost:8410", "http://idp.test:8410"]
+      : []),
   ],
 })
