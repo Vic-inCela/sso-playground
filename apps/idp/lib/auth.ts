@@ -4,6 +4,7 @@ import { jwt } from "better-auth/plugins"
 import { nextCookies } from "better-auth/next-js"
 import { createPgDatabase } from "@sso/auth"
 import { env } from "./env"
+import { playhornyCredentials } from "./playhorny"
 
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
@@ -12,9 +13,15 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  account: {
+    // Encrypt the backend token + refresh token at rest in the account row.
+    // decryptOAuthToken() in lib/playhorny-token.ts undoes this on the server.
+    encryptOAuthTokens: true,
+  },
   // Avoid clash between the email/password sign-in path and /oauth2/token
   disabledPaths: ["/token"],
   plugins: [
+    playhornyCredentials(),
     jwt(),
     oauthProvider({
       loginPage: "/sign-in",

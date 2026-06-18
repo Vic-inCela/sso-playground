@@ -17,7 +17,12 @@
         "IDP_CLIENT_ID",
         "IDP_CLIENT_SECRET",
         "CONSUMER_C_CLIENT_SECRET",
-        "CONSUMER_C_ORIGIN"
+        "CONSUMER_C_ORIGIN",
+        "API_BASE_URL_LOGIN",
+        "AUTH_LOGIN_CLIENT_ID",
+        "AUTH_LOGIN_AUTH_KIND",
+        "AUTH_REQUEST_SOURCE",
+        "UPSTREAM_WAF_HEADER_VALUE"
       ]
     },
     "dev": {

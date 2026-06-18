@@ -10,6 +10,12 @@ const envSchema = z.object({
   CONSUMER_B_ORIGIN: z.string().url(),
   CONSUMER_C_CLIENT_SECRET: z.string().min(1).optional(),
   CONSUMER_C_ORIGIN: z.string().url().optional(),
+  // Playhorny upstream login — all optional so startup never breaks when unset
+  API_BASE_URL_LOGIN: z.string().url().optional(),
+  AUTH_LOGIN_CLIENT_ID: z.string().optional(),
+  AUTH_LOGIN_AUTH_KIND: z.string().optional(),
+  AUTH_REQUEST_SOURCE: z.string().optional(),
+  UPSTREAM_WAF_HEADER_VALUE: z.string().optional(),
 })
 
 function parseEnv() {
